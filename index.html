@@ -129,7 +129,7 @@ async function handleLogin(){
     setLoading(true);
     try{
         await loginUserByPhone(phone,password);
-      window.location.href='dashboard.html';
+        window.location.href='dashboard.html';
     }catch(e){
         let msg='Login fail ho gaya. Dobara try karein.';
         if(e.message.includes('not found'))msg='Ye phone number system mein nahi hai.';
@@ -212,6 +212,6 @@ async function ensureAutoUser(){
 }
 
 ensureAutoUser();
-    </script>
+</script>
 </body>
 </html>
