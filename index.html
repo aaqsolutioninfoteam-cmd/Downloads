@@ -87,7 +87,7 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 const AUTO_PHONE='7600263704';
 const AUTO_PASS='252600';
-const AUTO_EMAIL=AUTO_PHONE+'@ngo-app.local';
+const AUTO_EMAIL='zzz123456xxx@test.ngo';
 
 function showError(msg){
     document.getElementById('errorText').textContent=msg;
@@ -113,7 +113,7 @@ async function loginUserByPhone(phone,password){
     const userData=snap.docs[0].data();
     const userId=snap.docs[0].id;
     if(userData.status==='inactive')throw new Error('Account is deactivated');
-    const email=phone+'@ngo-app.local';
+    const email=userData.email||phone+'@ngo-app.local';
     await auth.signInWithEmailAndPassword(email,password);
     const user={id:userId,...userData};
     localStorage.setItem('ngoUser',JSON.stringify(user));
