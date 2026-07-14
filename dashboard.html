@@ -53,12 +53,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-wi
 .appr-card{background:#fff;border-radius:12px;padding:14px;box-shadow:var(--shadow);margin-bottom:8px;border-left:4px solid var(--warning)}
 .appr-card h4{font-size:14px;font-weight:600;color:var(--text)}
 .appr-card p{font-size:12px;color:var(--text-light)}
-.ann-card{border-radius:12px;padding:14px;box-shadow:var(--shadow);margin-bottom:8px}
+.ann-card{border-radius:12px;padding:14px;box-shadow:var(--shadow);margin-bottom:8px;position:relative}
 .ann-card.normal{background:#e8f5e9;border-left:4px solid var(--success)}
 .ann-card.warning{background:#fff3e0;border-left:4px solid var(--warning)}
 .ann-card.urgent{background:#ffebee;border-left:4px solid var(--danger)}
-.ann-card h4{font-size:14px;font-weight:600}
+.ann-card h4{font-size:14px;font-weight:600;padding-right:50px}
 .ann-card p{font-size:12px;color:var(--text-light);margin-top:4px}
+.ann-actions{position:absolute;top:10px;right:10px;display:flex;gap:5px}
+.ann-actions button{background:none;border:none;cursor:pointer;font-size:12px;padding:4px}
+.ann-actions .edit-btn{color:var(--primary)}
+.ann-actions .del-btn{color:var(--danger)}
 .pbar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:6px}
 .pbar .fill{height:100%;border-radius:4px;transition:width .5s}
 .pbar .fill.g{background:var(--success)}
@@ -86,6 +90,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-wi
 .macts .btn-sm{flex:1;padding:10px}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary-dark);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:9999;display:none}
 .toast.err{background:var(--danger)}
+.popup-modal{align-items:center !important;}
+.popup-modal .modal{border-radius:var(--radius) !important; width:90%;}
 </style>
 </head>
 <body>
@@ -103,11 +109,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-wi
 <div id="coverageArea"></div>
 <div class="sec"><i class="fas fa-history"></i> Recent Activity</div>
 <div id="activityArea"></div>
-<div class="sec"><i class="fas fa-clock"></i> Pending Approvals <button class="btn-sm btn-g" style="margin-left:auto" onclick="loc='approvals.html'">View All</button></div>
+<div class="sec"><i class="fas fa-clock"></i> Pending Approvals <button class="btn-sm btn-g" style="margin-left:auto" onclick="location.href='approvals.html'">View All</button></div>
 <div id="apprArea"></div>
 <div class="sec"><i class="fas fa-bullhorn"></i> Announcements</div>
 <div id="annArea"></div>
 </div>
+
+<!-- Add/Edit Announcement Modal -->
 <div class="modal-ov" id="annModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="modal" onclick="event.stopPropagation()">
 <h2 id="annTitle">Add Announcement</h2>
@@ -121,6 +129,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;max-wi
 </div>
 </div>
 </div>
+
+<!-- Login Announcement Popup Modal for Normal Users -->
+<div class="modal-ov popup-modal" id="loginPopupModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal" onclick="event.stopPropagation()">
+<h2 style="color:var(--danger)"><i class="fas fa-bullhorn"></i> Important Notice</h2>
+<div id="popupContent" style="margin:15px 0; font-size:14px; color:var(--text)"></div>
+<div class="macts">
+<button class="btn-sm btn-g" onclick="document.getElementById('loginPopupModal').classList.remove('open')">Acknowledge / Close</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -131,8 +151,37 @@ if(!firebase.apps.length)firebase.initializeApp(FC);
 const db=firebase.firestore();
 let CU=null;
 
-function reqAuth(){const u=JSON.parse(localStorage.getItem("currentUser")||"null");if(!u||!u.phone){window.location.href="index.html";return null;}CU=u;return u;}
-function openSbar(){if(!CU)return;document.getElementById("sName").textContent=CU.name||"User";document.getElementById("sPhone").textContent=CU.phone||"";document.getElementById("sRole").textContent=CU.role==="division_head"?"Division Head":CU.role==="district_head"?"District Head":CU.role==="area_head"?"Area Head":CU.role||"";const m=document.getElementById("sMenu");m.innerHTML=`<a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a><a href="structure.html"><i class="fas fa-sitemap"></i> Tanzeemi Structure</a><a href="persons.html"><i class="fas fa-users"></i> People / Zimmedaran</a><a href="departments.html"><i class="fas fa-building"></i> Departments</a><a href="approvals.html"><i class="fas fa-check-double"></i> Approvals</a><a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a><a href="admin.html"><i class="fas fa-cog"></i> Admin & Settings</a>`;document.getElementById("sbar").classList.add("open");document.getElementById("sbarOv").style.display="block";}
+function reqAuth(){
+    const u=JSON.parse(localStorage.getItem("currentUser")||"null");
+    if(!u||!u.phone){window.location.href="index.html";return null;}
+    CU=u;
+    return u;
+}
+
+function openSbar(){
+    if(!CU)return;
+    document.getElementById("sName").textContent=CU.name||"User";
+    document.getElementById("sPhone").textContent=CU.phone||"";
+    document.getElementById("sRole").textContent=CU.role==="division_head"?"Division Head":CU.role==="district_head"?"District Head":CU.role==="area_head"?"Area Head":CU.role||"";
+    
+    const m=document.getElementById("sMenu");
+    let menuHTML = `<a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="structure.html"><i class="fas fa-sitemap"></i> Tanzeemi Structure</a>
+    <a href="persons.html"><i class="fas fa-users"></i> People / Zimmedaran</a>
+    <a href="departments.html"><i class="fas fa-building"></i> Departments</a>
+    <a href="approvals.html"><i class="fas fa-check-double"></i> Approvals</a>
+    <a href="reports.html"><i class="fas fa-chart-bar"></i> Reports</a>`;
+    
+    // Admin & Settings sirf Admin aur Division Head ko dikhega
+    if(CU.role === "division_head" || CU.role === "admin") {
+        menuHTML += `<a href="admin.html"><i class="fas fa-cog"></i> Admin & Settings</a>`;
+    }
+    m.innerHTML = menuHTML;
+    
+    document.getElementById("sbar").classList.add("open");
+    document.getElementById("sbarOv").style.display="block";
+}
+
 function closeSbar(){document.getElementById("sbar").classList.remove("open");document.getElementById("sbarOv").style.display="none";}
 function toast(m,e){const t=document.getElementById("toast");t.textContent=m;t.className=e?"toast err":"toast";t.style.display="block";setTimeout(()=>t.style.display="none",3000);}
 
@@ -149,91 +198,111 @@ const stats=[
 ];
 
 async function loadStats(){
-const c=document.getElementById("statCards");c.innerHTML="";
-for(const s of stats){
-try{
-let q;
-if(s.field!==undefined){q=await db.collection(s.coll).where(s.field,"==",s.val).get();}
-else{q=await db.collection(s.coll).get();}
-const count=q.size;
-const links={persons:"persons.html",active:"persons.html",inactive:"persons.html",depts:"departments.html",districts:"structure.html",areas:"structure.html",zh:"structure.html",vacant:"departments.html",appr:"approvals.html"};
-c.innerHTML+=`<div class="card" onclick="location.href='${links[s.id]||"#"}'"><div class="ci ${s.color}"><i class="fas ${s.icon}"></i></div><h3>${count}</h3><p>${s.label}</p></div>`;
-}catch(e){c.innerHTML+=`<div class="card"><div class="ci ${s.color}"><i class="fas ${s.icon}"></i></div><h3>0</h3><p>${s.label}</p></div>`;}
-}
+    const c=document.getElementById("statCards");c.innerHTML="";
+    for(const s of stats){
+        try{
+            let q;
+            let ref = db.collection(s.coll);
+            
+            // ROLE-BASED FILTER: District Head ke liye sirf unka district data load hoga
+            if(CU.role === "district_head" && CU.districtId) {
+                if(s.coll !== "districts") { 
+                    ref = ref.where("districtId", "==", CU.districtId);
+                }
+            }
+            
+            if(s.field!==undefined){q=await ref.where(s.field,"==",s.val).get();}
+            else{q=await ref.get();}
+            
+            const count=q.size;
+            const links={persons:"persons.html",active:"persons.html",inactive:"persons.html",depts:"departments.html",districts:"structure.html",areas:"structure.html",zh:"structure.html",vacant:"departments.html",appr:"approvals.html"};
+            c.innerHTML+=`<div class="card" onclick="location.href='${links[s.id]||"#"}'"><div class="ci ${s.color}"><i class="fas ${s.icon}"></i></div><h3>${count}</h3><p>${s.label}</p></div>`;
+        }catch(e){c.innerHTML+=`<div class="card"><div class="ci ${s.color}"><i class="fas ${s.icon}"></i></div><h3>0</h3><p>${s.label}</p></div>`;}
+    }
 }
 
 async function loadCoverage(){
-const a=document.getElementById("coverageArea");a.innerHTML='<div style="text-align:center;padding:10px;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
-try{
-const[personsSnap,deptsSnap,staffSnap]=await Promise.all([db.collection("persons").get(),db.collection("departments").get(),db.collection("dept_staff").get()]);
-const totalP=personsSnap.size,activeP=personsSnap.docs.filter(d=>d.data().status==="active").length;
-const totalD=deptsSnap.size,filled=staffSnap.docs.filter(d=>d.data().personId).length,vacant=staffSnap.size-filled;
-const hierPct=totalP>0?Math.round((activeP/totalP)*100):0;
-const deptPct=staffSnap.size>0?Math.round((filled/staffSnap.size)*100):0;
-a.innerHTML=`
-<div class="cov-card"><h4>Hierarchy Coverage</h4><p class="pct">${hierPct}%</p><div class="pbar"><div class="fill ${hierPct>70?"g":hierPct>40?"o":"r"}" style="width:${hierPct}%"></div></div></div>
-<div class="cov-card"><h4>Department Coverage</h4><p class="pct">${deptPct}%</p><div class="pbar"><div class="fill ${deptPct>70?"g":deptPct>40?"o":"r"}" style="width:${deptPct}%"></div></div></div>
-<div class="cov-card"><h4>Filled / Vacant Positions</h4><p class="pct">${filled} Filled / ${vacant} Vacant</p><div class="pbar"><div class="fill g" style="width:${staffSnap.size>0?(filled/staffSnap.size*100):0}%"></div></div></div>
-`;
-}catch(e){a.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i><p>Coverage data unavailable</p></div>';}
+    const a=document.getElementById("coverageArea");a.innerHTML='<div style="text-align:center;padding:10px;color:var(--text-light)"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    try{
+        let pRef = db.collection("persons");
+        let dRef = db.collection("departments");
+        let sRef = db.collection("dept_staff");
+        
+        if(CU.role === "district_head" && CU.districtId) {
+            pRef = pRef.where("districtId", "==", CU.districtId);
+            sRef = sRef.where("districtId", "==", CU.districtId);
+        }
+        
+        const[personsSnap,deptsSnap,staffSnap]=await Promise.all([pRef.get(),dRef.get(),sRef.get()]);
+        const totalP=personsSnap.size,activeP=personsSnap.docs.filter(d=>d.data().status==="active").length;
+        const filled=staffSnap.docs.filter(d=>d.data().personId).length,vacant=staffSnap.size-filled;
+        const hierPct=totalP>0?Math.round((activeP/totalP)*100):0;
+        const deptPct=staffSnap.size>0?Math.round((filled/staffSnap.size)*100):0;
+        
+        a.innerHTML=`
+        <div class="cov-card"><h4>Hierarchy Coverage</h4><p class="pct">${hierPct}%</p><div class="pbar"><div class="fill ${hierPct>70?"g":hierPct>40?"o":"r"}" style="width:${hierPct}%"></div></div></div>
+        <div class="cov-card"><h4>Department Coverage</h4><p class="pct">${deptPct}%</p><div class="pbar"><div class="fill ${deptPct>70?"g":deptPct>40?"o":"r"}" style="width:${deptPct}%"></div></div></div>
+        <div class="cov-card"><h4>Filled / Vacant Positions</h4><p class="pct">${filled} Filled / ${vacant} Vacant</p><div class="pbar"><div class="fill g" style="width:${staffSnap.size>0?(filled/staffSnap.size*100):0}%"></div></div></div>
+        `;
+    }catch(e){a.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i><p>Coverage data unavailable</p></div>';}
 }
 
 async function loadActivity(){
-const a=document.getElementById("activityArea");
-try{
-const snap=await db.collection("person_history").orderBy("createdAt","desc").limit(10).get();
-if(snap.empty){a.innerHTML='<div class="empty"><i class="fas fa-history"></i><p>No recent activity</p></div>';return;}
-const icons={created:["fa-plus-circle","g"],updated:["fa-edit","b"],head_changed:["fa-user-tie","o"],transferred:["fa-exchange-alt","b"],dept_changed:["fa-building","p"],approved:["fa-check-circle","g"]};
-a.innerHTML="";
-snap.forEach(doc=>{
-const d=doc.data();
-const[ic,clr]=icons[d.type]||["fa-info-circle","b"];
-const dt=d.createdAt?new Date(d.createdAt).toLocaleDateString("en-GB"):"";
-a.innerHTML+=`<div class="act-item"><div class="ai ${clr}"><i class="fas ${ic}"></i></div><div class="at">${d.description||d.type||"Activity"}<small>${dt}</small></div></div>`;
-});
-}catch(e){a.innerHTML='<div class="empty"><i class="fas fa-history"></i><p>No activity</p></div>';}
+    const a=document.getElementById("activityArea");
+    try{
+        let ref = db.collection("person_history");
+        if(CU.role === "district_head" && CU.districtId) {
+            ref = ref.where("districtId", "==", CU.districtId);
+        }
+        const snap=await ref.orderBy("createdAt","desc").limit(10).get();
+        if(snap.empty){a.innerHTML='<div class="empty"><i class="fas fa-history"></i><p>No recent activity</p></div>';return;}
+        const icons={created:["fa-plus-circle","g"],updated:["fa-edit","b"],head_changed:["fa-user-tie","o"],transferred:["fa-exchange-alt","b"],dept_changed:["fa-building","p"],approved:["fa-check-circle","g"]};
+        a.innerHTML="";
+        snap.forEach(doc=>{
+            const d=doc.data();
+            const[ic,clr]=icons[d.type]||["fa-info-circle","b"];
+            const dt=d.createdAt?new Date(d.createdAt).toLocaleDateString("en-GB"):"";
+            a.innerHTML+=`<div class="act-item"><div class="ai ${clr}"><i class="fas ${ic}"></i></div><div class="at">${d.description||d.type||"Activity"}<small>${dt}</small></div></div>`;
+        });
+    }catch(e){a.innerHTML='<div class="empty"><i class="fas fa-history"></i><p>No activity</p></div>';}
 }
 
 async function loadApprovals(){
-const a=document.getElementById("apprArea");
-try{
-const snap=await db.collection("approvals").where("status","==","pending").limit(5).get();
-if(snap.empty){a.innerHTML='<div class="empty"><i class="fas fa-check-double"></i><p>No pending approvals</p></div>';return;}
-a.innerHTML="";
-snap.forEach(doc=>{
-const d=doc.data();
-a.innerHTML+=`<div class="appr-card"><h4>${d.requestNumber||doc.id} - ${d.requestType||""}</h4><p>By: ${d.requestedByName||"-"} | ${d.createdAt?new Date(d.createdAt).toLocaleDateString("en-GB"):""}</p></div>`;
-});
-}catch(e){a.innerHTML='<div class="empty"><i class="fas fa-check-double"></i><p>No pending</p></div>';}
+    const a=document.getElementById("apprArea");
+    try{
+        let ref = db.collection("approvals").where("status","==","pending");
+        if(CU.role === "district_head" && CU.districtId) {
+            ref = ref.where("districtId", "==", CU.districtId);
+        }
+        const snap=await ref.limit(5).get();
+        if(snap.empty){a.innerHTML='<div class="empty"><i class="fas fa-check-double"></i><p>No pending approvals</p></div>';return;}
+        a.innerHTML="";
+        snap.forEach(doc=>{
+            const d=doc.data();
+            a.innerHTML+=`<div class="appr-card"><h4>${d.requestNumber||doc.id} - ${d.requestType||""}</h4><p>By: ${d.requestedByName||"-"} | ${d.createdAt?new Date(d.createdAt).toLocaleDateString("en-GB"):""}</p></div>`;
+        });
+    }catch(e){a.innerHTML='<div class="empty"><i class="fas fa-check-double"></i><p>No pending</p></div>';}
 }
 
 async function loadAnnouncements(){
-const a=document.getElementById("annArea");
-try{
-const snap=await db.collection("announcements").orderBy("createdAt","desc").limit(5).get();
-let h="";
-snap.forEach(doc=>{
-const d=doc.data();
-h+=`<div class="ann-card ${d.type||'normal'}"><h4>${d.title||""}</h4><p>${d.message||""}</p></div>`;
-});
-if(CU&&CU.role==="division_head"){h+=`<button class="btn-sm btn-g" style="margin-top:10px;width:100%" onclick="openAnnModal()"><i class="fas fa-plus"></i> Add Announcement</button>`;}
-a.innerHTML=h||'<div class="empty"><i class="fas fa-bullhorn"></i><p>No announcements</p></div>';
-}catch(e){a.innerHTML='<div class="empty"><i class="fas fa-bullhorn"></i><p>No announcements</p></div>';}
-}
-
-function openAnnModal(id){document.getElementById("annTitle").textContent=id?"Edit Announcement":"Add Announcement";document.getElementById("annEditId").value=id||"";document.getElementById("annTitleInp").value="";document.getElementById("annMsgInp").value="";document.getElementById("annTypeInp").value="normal";document.getElementById("annModal").classList.add("open");}
-
-async function saveAnn(){
-const id=document.getElementById("annEditId").value,title=document.getElementById("annTitleInp").value.trim(),msg=document.getElementById("annMsgInp").value.trim(),type=document.getElementById("annTypeInp").value;
-if(!title||!msg){toast("Title aur message dalen",true);return;}
-try{
-if(id){await db.collection("announcements").doc(id).update({title,message:msg,type,updatedAt:new Date().toISOString()});}
-else{await db.collection("announcements").add({title,message:msg,type,createdBy:CU.id||CU.uid||"system",createdAt:new Date().toISOString()});}
-document.getElementById("annModal").classList.remove("open");toast("Saved!");loadAnnouncements();
-}catch(e){toast("Error: "+e.message,true);}
-}
-
-window.onload=async()=>{if(!reqAuth())return;await Promise.all([loadStats(),loadCoverage(),loadActivity(),loadApprovals(),loadAnnouncements()]);};
-</script>
-</body>
-</html>
+    const a=document.getElementById("annArea");
+    try{
+        const snap=await db.collection("announcements").orderBy("createdAt","desc").limit(5).get();
+        let h="";
+        let latestAnn = null;
+        
+        snap.forEach((doc, index)=>{
+            const d=doc.data();
+            if(index === 0) latestAnn = d; // Store latest announcement for popup
+            
+            let actionButtons = "";
+            // Edit aur Delete buttons sirf Division Head ya Admin ko dikhenge
+            if(CU && (CU.role === "division_head" || CU.role === "admin")) {
+                actionButtons = `
+                    <div class="ann-actions">
+                        <button class="edit-btn" onclick="openAnnModal('${doc.id}', '${d.title}', '${d.message}', '${d.type}')"><i class="fas fa-edit"></i></button>
+                        <button class="del-btn" onclick="deleteAnn('${doc.id}')"><i class="fas fa-trash"></i></button>
+                    </div>`;
+            }
+            
+            h+=`<div class="ann-card ${d.type||'normal'}">${actionBut
