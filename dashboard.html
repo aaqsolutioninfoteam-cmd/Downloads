@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>NGO Management - Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--p:#1a6b3c;--pd:#0d4a25;--d:#dc3545;--w:#ff9800;--su:#28a745;--l:#f5f7fa;--dk:#1a1a2e;--g:#6c757d;--gl:#e9ecef;--w2:#fff}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--l);color:var(--dk);max-width:500px;margin:0 auto;min-height:100vh;position:relative}
+.btn{padding:12px 24px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--su));color:var(--w2)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,107,60,0.3)}
+.btn-blk{width:100%}.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-s{background:var(--gl);color:var(--dk)}.btn-d{background:var(--d);color:var(--w2)}.btn-su{background:var(--su);color:var(--w2)}.btn-w{background:var(--w);color:var(--w2)}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--p),var(--pd));padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.header-top{display:flex;align-items:center;gap:12px;flex:1}
+.menu-btn{background:none;border:none;color:var(--w2);font-size:22px;cursor:pointer;padding:4px}
+.header-t{color:var(--w2);font-size:17px;font-weight:600}
+.header-r{display:flex;align-items:center;gap:8px}
+.avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;color:var(--w2);font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,0.4)}
+.sb-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:200;display:none;opacity:0;transition:opacity 0.3s}
+.sb-overlay.show{display:block;opacity:1}
+.sidebar{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--w2);z-index:300;transition:left 0.3s ease;box-shadow:4px 0 20px rgba(0,0,0,0.1);display:flex;flex-direction:column}
+.sidebar.open{left:0}
+.sb-head{background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px;color:var(--w2)}
+.sb-close{background:none;border:none;color:var(--w2);font-size:20px;cursor:pointer;position:absolute;top:14px;right:14px}
+.sb-user{text-align:center;margin-top:8px}
+.sb-user h3{font-size:16px;font-weight:600;margin-bottom:2px}
+.sb-user p{font-size:12px;opacity:0.8}
+.sb-user .avatar-lg{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 10px;border:3px solid rgba(255,255,255,0.4)}
+.sb-menu{list-style:none;padding:8px 0;flex:1;overflow-y:auto}
+.sb-menu li a{display:flex;align-items:center;gap:12px;padding:13px 20px;color:var(--dk);text-decoration:none;font-size:14px;font-weight:500;transition:all 0.2s}
+.sb-menu li a:hover{background:var(--l);color:var(--p)}
+.sb-menu li a.active{background:rgba(26,107,60,0.1);color:var(--p);font-weight:600;border-right:3px solid var(--p)}
+.sb-menu li a svg{width:20px;height:20px;flex-shrink:0}
+.sb-div{height:1px;background:var(--gl);margin:8px 0}
+.main{padding:16px;padding-bottom:90px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat{background:var(--w2);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:transform 0.2s}
+.stat:hover{transform:translateY(-2px)}
+.stat .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:10px}
+.stat .stat-num{font-size:24px;font-weight:700;color:var(--dk)}
+.stat .stat-label{font-size:12px;color:var(--g);margin-top:2px}
+.card{background:var(--w2);border-radius:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between}
+.card-h h3{font-size:15px;font-weight:600}
+.card-b{padding:0}
+.lst-i{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--gl);transition:background 0.2s}
+.lst-i:last-child{border-bottom:none}
+.lst-i:hover{background:var(--l)}
+.lst-a{flex:1;min-width:0}
+.lst-a h4{font-size:14px;font-weight:600;margin-bottom:2px}
+.lst-a p{font-size:12px;color:var(--g);margin-bottom:1px;line-height:1.3}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-su{background:#e8f5e9;color:var(--su)}.b-w{background:#fff3e0;color:var(--w)}.b-d{background:#ffebee;color:var(--d)}.b-i{background:#e3f2fd;color:#1976d2}
+.alert{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn 0.4s}
+.a-su{background:#e8f5e9;color:var(--su);border:1px solid #c8e6c9}
+.a-d{background:#ffebee;color:var(--d);border:1px solid #ffcdd2}
+.a-w{background:#fff3e0;color:var(--w);border:1px solid #ffe0b2}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.ap-pend{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #ffcc80;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform 0.2s}
+.ap-pend:hover{transform:translateY(-1px)}
+.ap-pend .ap-ic{width:40px;height:40px;border-radius:50%;background:var(--w);display:flex;align-items:center;justify-content:center;color:var(--w2);font-size:18px;flex-shrink:0}
+.ap-pend .ap-tx h4{font-size:14px;font-weight:600;color:var(--dk)}
+.ap-pend .ap-tx p{font-size:12px;color:var(--g)}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:var(--w2);border-top:1px solid var(--gl);display:flex;z-index:100;padding:6px 0 env(safe-area-inset-bottom,6px)}
+.bnav a{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;text-decoration:none;color:var(--g);font-size:10px;font-weight:500;transition:color 0.2s;gap:4px}
+.bnav a.active{color:var(--p)}
+.bnav a svg{width:22px;height:22px}
+.loader{display:flex;justify-content:center;padding:40px}
+.spinner{width:30px;height:30px;border:3px solid var(--gl);border-top-color:var(--p);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.detail-section{margin-bottom:8px}
+.detail-section .sec-title{font-size:12px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:0.5px;padding:10px 16px 6px;background:var(--l)}
+.form-group{margin-bottom:16px}.form-group label{display:block;font-size:13px;font-weight:600;color:var(--dk);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:2px solid var(--gl);border-radius:10px;font-size:14px;background:#fafafa;color:var(--dk);outline:none;transition:all 0.3s;font-family:inherit}
+.form-group input:focus,.form-group select:focus{border-color:var(--p);background:var(--w2);box-shadow:0 0 0 3px rgba(26,107,60,0.1)}
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:400;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}
+.modal-c{background:var(--w2);width:100%;max-width:500px;max-height:85vh;border-radius:14px 14px 0 0;transform:translateY(100%);transition:transform 0.3s ease;overflow:hidden;display:flex;flex-direction:column}
+.modal.show .modal-c{transform:translateY(0)}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--gl);display:flex;align-items:center;justify-content:space-between}.modal-h h3{font-size:16px;font-weight:600}
+.modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--g)}
+.modal-b{padding:20px;overflow-y:auto;flex:1}
+.modal-f{padding:14px 20px;border-top:1px solid var(--gl);display:flex;gap:10px}
+.cred-box{background:#e8f5e9;border:2px solid var(--su);border-radius:10px;padding:14px;margin-top:12px}
+.cred-box h4{color:var(--su);margin-bottom:8px;font-size:14px}
+.cred-box p{font-size:13px;margin:4px 0}.cred-box strong{color:var(--dk)}
+@media(min-width:768px){.stats{grid-template-columns:repeat(4,1fr)}.bnav{display:none}}
+</style>
+</head>
+<body>
+
+<header class="header">
+<div class="header-top">
+<button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+<span class="header-t">Dashboard</span>
+</div>
+<div class="header-r">
+<div class="avatar" id="avatarEl">?</div>
+</div>
+</header>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+<nav class="sidebar" id="sidebar">
+<div class="sb-head" style="position:relative">
+<button class="sb-close" onclick="closeSidebar()">&times;</button>
+<div class="sb-user">
+<div class="avatar-lg" id="sbAvatar">?</div>
+<h3 id="sbName">Loading...</h3>
+<p id="sbRole">...</p>
+</div>
+</div>
+<ul class="sb-menu" id="sbMenu"></ul>
+</nav>
+
+<div class="main" id="mainContent">
+<div class="loader" id="pageLoader"><div class="spinner"></div></div>
+</div>
+
+<!-- CREATE HEAD MODAL -->
+<div class="modal" id="createHeadModal">
+<div class="modal-c">
+<div class="modal-h"><h3 id="createHeadTitle">Naya Head Banao</h3><button class="modal-x" onclick="closeModal('createHeadModal')">&times;</button></div>
+<div class="modal-b">
+<div class="form-group"><label>Role *</label><select id="headRole" onchange="onHeadRoleChange()">
+<option value="">-- Select --</option>
+<option value="district_head">District Head</option>
+<option value="area_head">Area Head</option>
+</select></div>
+<div class="form-group" id="headLevelGroup" style="display:none"><label id="headLevelLabel">Level *</label><select id="headLevel"></select></div>
+<div class="form-group"><label>Naam *</label><input type="text" id="headName" placeholder="Full name"></div>
+<div class="form-group"><label>Mobile Number *</label><input type="tel" id="headPhone" placeholder="XXXXXXXXXX" maxlength="10"></div>
+<div class="form-group"><label>Password *</label><input type="password" id="headPass" placeholder="Min 6 characters"></div>
+<button class="btn btn-p btn-blk" onclick="createHead()">Head Banao</button>
+<div id="credDisplay"></div>
+</div>
+</div>
+</div>
+
+<nav class="bnav" id="bnav"></nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.firebasestorage.app",messagingSenderId:"438479516590",appId:"1:438479516590:web:fc0a9aaa4a0285f0dc0e3f",measurementId:"G-TJWXZSQXGH"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+function toggleSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbOverlay').classList.add('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('show')}
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function showAlert(msg,type){const d=document.createElement('div');d.className='alert a-'+type;d.innerHTML='<span>'+msg+'</span>';const m=document.querySelector('.main');if(m){m.insertBefore(d,m.firstChild);setTimeout(()=>d.remove(),4000)}}
+function getCurrentUser(){const s=localStorage.getItem('ngoUser');return s?JSON.parse(s):null}
+function logoutUser(){auth.signOut();localStorage.removeItem('ngoUser');window.location.href='index.html'}
+function requireAuth(allowedRoles){const u=getCurrentUser();if(!u||!allowedRoles.includes(u.role)){window.location.href='index.html';return null}return u}
+
+function getSidebarHTML(role){
+const menus={
+division_head:[
+{l:'Dashboard',h:'dashboard.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',a:true},
+{l:'Districts',h:'districts.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>'},
+{l:'Areas',h:'areas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>'},
+{l:'Zeli Halqas',h:'zeli-halqas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-4-4h-4"/></svg>'},
+{l:'Departments',h:'departments.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>'},
+{l:'Approvals',h:'approvals.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'}
+],
+district_head:[
+{l:'Dashboard',h:'dashboard.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',a:true},
+{l:'Areas',h:'areas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 6 8 12 8 12s8-6 8-12a8 8 0 00-8-8z"/></svg>'},
+{l:'Zeli Halqas',h:'zeli-halqas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'},
+{l:'Approvals',h:'approvals.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'}
+],
+area_head:[
+{l:'Dashboard',h:'dashboard.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',a:true},
+{l:'Zeli Halqas',h:'zeli-halqas.html',i:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>'}
+]
+};
+const items=menus[role]||menus.area_head;
+return items.map(m=>'<li><a href="'+m.h+'" class="'+(m.a?'active':'')+'">'+m.i+'<span>'+m.l+'</span></a></li>').join('')+'<div class="sb-div"></div><li><a href="index.html" onclick="logoutUser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Logout</span></a></li>';
+}
+
+function getBottomNavHTML(role){
+const navs={
+division_head:[{l:'Home',h:'dashboard.html',a:true},{l:'Districts',h:'districts.html'},{l:'Approvals',h:'approvals.html'}],
+district_head:[{l:'Home',h:'dashboard.html',a:true},{l:'Areas',h:'areas.html'},{l:'Approvals',h:'approvals.html'}],
+area_head:[{l:'Home',h:'dashboard.html',a:true},{l:'Zeli Halqas',h:'zeli-halqas.html'}]
+};
+const items=navs[role]||navs.area_head;
+const icons=['<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21V11h6v10"/></svg>','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>'];
+return items.map((x,i)=>'<a href="'+x.h+'" class="'+(x.a?'active':'')+'">'+(icons[i]||'')+'<span>'+x.l+'</span></a>').join('');
+}
+
+// CREATE HEAD FUNCTIONS
+function openCreateHeadModal(){
+document.getElementById('headRole').value='';
+document.getElementById('headLevelGroup').style.display='none';
+document.getElementById('headName').value='';
+document.getElementById('headPhone').value='';
+document.getElementById('headPass').value='';
+document.getElementById('credDisplay').innerHTML='';
+openModal('createHeadModal');
+}
+
+async function onHeadRoleChange(){
+const role=document.getElementById('headRole').value;
+const group=document.getElementById('headLevelGroup');
+const label=document.getElementById('headLevelLabel');
+const sel=document.getElementById('headLevel');
+if(!role){group.style.display='none';return}
+group.style.display='block';
+sel.innerHTML='<div class="spinner" style="margin:10px auto"></div>';
+
+if(role==='district_head'){
+label.textContent='Division *';
+sel.innerHTML='<option value="'+currentUser.levelId+'">My Division</option>';
+}else if(role==='area_head'){
+label.textContent='District *';
+const snap=await db.collection('districts').where('divisionId','==',currentUser.levelId).get();
+if(snap.empty){sel.innerHTML='<option value="">Pehle district banao</option>';return}
+sel.innerHTML='<option value="">-- Select District --</option>';
+snap.forEach(d=>{sel.innerHTML+='<option value="'+d.id+'">'+d.data().name+'</option>'});
+}
+}
+
+async function createHead(){
+const role=document.getElementById('headRole').value;
+const levelId=document.getElementById('headLevel').value;
+const name=document.getElementById('headName').value.trim();
+const phone=document.getElementById('headPhone').value.trim();
+const pass=document.getElementById('headPass').value.trim();
+
+if(!role){showAlert('Role select karein','d');return}
+if(role==='area_head'&&!levelId){showAlert('District select karein','d');return}
+if(!name){showAlert('Naam dalein','d');return}
+if(!phone||phone.length!==10){showAlert('10 digit mobile number dalein','d');return}
+if(!pass||pass.length<6){showAlert('Password min 6 characters','d');return}
+
+const existing=await db.collection('users').where('phone','==',phone).get();
+if(!existing.empty){showAlert('Ye number pehle se registered hai!','d');return}
+
+const email=phone+'@ngo-app.local';
+let levelName='',districtId='';
+
+try{
+if(role==='district_head'){
+const dSnap=await db.collection('districts').doc(levelId).get();
+levelName=dSnap.exists?dSnap.data().name:levelId;
+}else{
+districtId=levelId;
+const dSnap=await db.collection('districts').doc(levelId).get();
+levelName=dSnap.exists?dSnap.data().name:levelId;
+}
+
+const cred=await auth.createUserWithEmailAndPassword(email,pass);
+const uid=cred.user.uid;
+
+const userData={name,phone,email,role,levelId:role==='district_head'?levelId:levelId,levelType:role==='district_head'?'district':'area',status:'active',createdBy:currentUser.id,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+if(role==='area_head'){userData.districtId=districtId;userData.districtName=levelName}
+if(role==='district_head')userData.districtName=levelName;
+
+await db.collection('users').doc(uid).set(userData);
+
+document.getElementById('credDisplay').innerHTML=
+'<div class="cred-box"><h4>Head Ban Gaya!</h4>'+
+'<p><strong>Naam:</strong> '+name+'</p>'+
+'<p><strong>Mobile:</strong> '+phone+'</p>'+
+'<p><strong>Password:</strong> '+pass+'</p>'+
+'<p><strong>Role:</strong> '+role.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase())+'</p>'+
+'<p style="margin-top:8px;color:var(--d);font-size:12px">Ye credentials head ko dein!</p></div>';
+document.getElementById('headName').value='';
+document.getElementById('headPhone').value='';
+document.getElementById('headPass').value='';
+showAlert('Head successfully bana!','su');
+initDashboard(currentUser);
+}catch(e){showAlert('Error: '+e.message,'d')}
+}
+
+// MAIN DASHBOARD INIT
+async function initDashboard(user){
+document.getElementById('sbName').textContent=user.name||'User';
+document.getElementById('sbRole').textContent=(user.role||'').replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+document.getElementById('sbAvatar').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('avatarEl').textContent=(user.name||'?')[0].toUpperCase();
+document.getElementById('sbMenu').innerHTML=getSidebarHTML(user.role);
+document.getElementById('bnav').innerHTML=getBottomNavHTML(user.role);
+
+try{
+const role=user.role;
+let html='';
+
+if(role==='division_head'){
+html=await renderDivisionDashboard(user);
+}else if(role==='district_head'){
+html=await renderDistrictDashboard(user);
+}else if(role==='area_head'){
+html=await renderAreaDashboard(user);
+}
+
+document.getElementById('mainContent').innerHTML=html;
+}catch(e){
+console.error(e);
+document.getElementById('mainContent').innerHTML='<div class="alert a-d">Data load mein problem hui</div>';
+}
+}
+
+// DIVISION HEAD DASHBOARD
+async function renderDivisionDashboard(user){
+const[distSnap,areaSnap,zhSnap,apSnap,usersSnap,deptSnap]=await Promise.all([
+db.collection('districts').where('divisionId','==',user.levelId).get(),
+db.collection('areas').where('divisionId','==',user.levelId).get(),
+db.collection('zeli_halqas').where('divisionId','==',user.levelId).get(),
+db.collection('approvals').where('levelId','==',user.levelId).get(),
+db.collection('users').where('createdBy','==',user.id).get(),
+db.collection('departments').where('divisionId','==',user.levelId).get()
+]);
+
+let pendingCount=0;
+apSnap.forEach(d=>{if(d.data().status==='pending')pendingCount++});
+
+let html='';
+// PENDING ALERT
+if(pendingCount>0){
+html+='<div class="ap-pend" onclick="window.location.href=\'approvals.html\'"><div class="ap-ic">&#128276;</div><div class="ap-tx"><h4>'+pendingCount+' Pending Approvals</h4><p>Click to review and approve/reject</p></div></div>';
+}
+
+// STATS
+html+='<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#127970;</div><div class="stat-num">'+distSnap.size+'</div><div class="stat-label">Districts</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e3f2fd;color:#1976d2">&#128205;</div><div class="stat-num">'+areaSnap.size+'</div><div class="stat-label">Areas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#128332;</div><div class="stat-num">'+zhSnap.size+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#f3e5f5;color:#7b1fa2">&#128188;</div><div class="stat-num">'+deptSnap.size+'</div><div class="stat-label">Departments</div></div>'+
+'</div>';
+
+// CREATE HEAD BUTTON
+html+='<button class="btn btn-p btn-blk" onclick="openCreateHeadModal()" style="margin-bottom:14px">+ Naya Head Banao</button>';
+
+// DISTRICTS LIST
+html+='<div class="card"><div class="card-h"><h3>Districts ('+distSnap.size+')</h3></div><div class="card-b">';
+if(distSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi district nahi. <a href="districts.html">Pehla banao</a></p></div></div>'}
+else{
+distSnap.forEach(doc=>{
+const d=doc.data();
+html+='<div class="lst-i"><div class="lst-a"><h4>&#127961; '+d.name+'</h4><p>Head: '+(d.headName||'Assign nahi')+'</p></div><span class="badge b-su">Active</span></div>';
+});
+}
+html+='</div></div>';
+
+// AREAS LIST
+html+='<div class="card"><div class="card-h"><h3>Areas ('+areaSnap.size+')</h3></div><div class="card-b">';
+if(areaSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi area nahi</p></div></div>'}
+else{
+const distMap={};
+distSnap.forEach(d=>distMap[d.id]=d.data().name);
+areaSnap.forEach(doc=>{
+const a=doc.data();
+html+='<div class="lst-i"><div class="lst-a"><h4>&#128205; '+a.name+'</h4><p>District: '+(distMap[a.districtId]||'N/A')+' | Head: '+(a.headName||'N/A')+'</p></div></div>';
+});
+}
+html+='</div></div>';
+
+// ZELI HALQAS LIST
+html+='<div class="card"><div class="card-h"><h3>Zeli Halqas ('+zhSnap.size+')</h3></div><div class="card-b">';
+if(zhSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi zeli halqa nahi</p></div></div>'}
+else{
+zhSnap.forEach(doc=>{
+const z=doc.data();
+html+='<div class="lst-i"><div class="lst-a"><h4>&#128332; '+(z.masjidName||'Masjid')+'</h4><p>Imam: '+(z.imamName||'N/A')+' | '+(z.imamPhone||'N/A')+'</p><p>Head: '+(z.halqaHeadName||'N/A')+' | '+(z.halqaHeadPhone||'N/A')+'</p></div></div>';
+});
+}
+html+='</div></div>';
+
+// USERS/HEADS LIST
+html+='<div class="card"><div class="card-h"><h3>Team Members ('+usersSnap.size+')</h3></div><div class="card-b">';
+if(usersSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Abhi koi member nahi</p></div></div>'}
+else{
+usersSnap.forEach(doc=>{
+const u=doc.data();
+const roleLabel=(u.role||'').replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+html+='<div class="lst-i"><div class="lst-a"><h4>&#128100; '+u.name+'</h4><p>'+roleLabel+' | Phone: '+u.phone+'</p><p>'+(u.districtName||'')+'</p></div><span class="badge b-su">Active</span></div>';
+});
+}
+html+='</div></div>';
+
+return html;
+}
+
+// DISTRICT HEAD DASHBOARD
+async function renderDistrictDashboard(user){
+const[areaSnap,zhSnap,apSnap,usersSnap]=await Promise.all([
+db.collection('areas').where('districtId','==',user.levelId).get(),
+db.collection('zeli_halqas').where('districtId','==',user.levelId).get(),
+db.collection('approvals').where('submittedById','==',user.id).get(),
+db.collection('users').where('createdBy','==',user.id).get()
+]);
+
+let pendingCount=0;
+apSnap.forEach(d=>{if(d.data().status==='pending')pendingCount++});
+
+let html='';
+if(pendingCount>0){
+html+='<div class="ap-pend" onclick="window.location.href=\'approvals.html\'"><div class="ap-ic">&#128276;</div><div class="ap-tx"><h4>'+pendingCount+' Pending Submissions</h4><p>Click to view status</p></div></div>';
+}
+
+html+='<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#e3f2fd;color:#1976d2">&#128205;</div><div class="stat-num">'+areaSnap.size+'</div><div class="stat-label">Areas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#128332;</div><div class="stat-num">'+zhSnap.size+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#128101;</div><div class="stat-num">'+usersSnap.size+'</div><div class="stat-label">Team</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#fce4ec;color:var(--d)">&#128196;</div><div class="stat-num">'+apSnap.size+'</div><div class="stat-label">Submissions</div></div>'+
+'</div>';
+
+// AREAS
+html+='<div class="card"><div class="card-h"><h3>Areas ('+areaSnap.size+')</h3><a href="areas.html" style="font-size:13px;color:var(--p);text-decoration:none">View All</a></div><div class="card-b">';
+if(areaSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi area nahi. <a href="areas.html">Pehla banao</a></p></div></div>'}
+else{areaSnap.forEach(doc=>{const a=doc.data();html+='<div class="lst-i"><div class="lst-a"><h4>&#128205; '+a.name+'</h4><p>Head: '+(a.headName||'N/A')+'</p></div></div>';})}
+html+='</div></div>';
+
+// ZELI HALQAS
+html+='<div class="card"><div class="card-h"><h3>Zeli Halqas ('+zhSnap.size+')</h3><a href="zeli-halqas.html" style="font-size:13px;color:var(--p);text-decoration:none">View All</a></div><div class="card-b">';
+if(zhSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi zeli halqa nahi</p></div></div>'}
+else{zhSnap.forEach(doc=>{const z=doc.data();html+='<div class="lst-i"><div class="lst-a"><h4>&#128332; '+(z.masjidName||'Masjid')+'</h4><p>Imam: '+(z.imamName||'N/A')+' | '+(z.imamPhone||'N/A')+'</p></div></div>';})}
+html+='</div></div>';
+
+// TEAM MEMBERS
+html+='<div class="card"><div class="card-h"><h3>Area Heads ('+usersSnap.size+')</h3></div><div class="card-b">';
+if(usersSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Abhi koi area head nahi</p></div></div>'}
+else{usersSnap.forEach(doc=>{const u=doc.data();html+='<div class="lst-i"><div class="lst-a"><h4>&#128100; '+u.name+'</h4><p>Phone: '+u.phone+' | Area: '+(u.areaName||'N/A')+'</p></div><span class="badge b-su">Active</span></div>';})}
+html+='</div></div>';
+
+return html;
+}
+
+// AREA HEAD DASHBOARD
+async function renderAreaDashboard(user){
+const zhSnap=await db.collection('zeli_halqas').where('areaId','==',user.levelId).get();
+
+let html='';
+html+='<div class="stats">'+
+'<div class="stat"><div class="stat-icon" style="background:#fff3e0;color:var(--w)">&#128332;</div><div class="stat-num">'+zhSnap.size+'</div><div class="stat-label">Zeli Halqas</div></div>'+
+'<div class="stat"><div class="stat-icon" style="background:#e8f5e9;color:var(--su)">&#127970;</div><div class="stat-num">1</div><div class="stat-label">My Area</div></div>'+
+'</div>';
+
+html+='<div class="card"><div class="card-h"><h3>Zeli Halqas ('+zhSnap.size+')</h3><a href="zeli-halqas.html" style="font-size:13px;color:var(--p);text-decoration:none">Manage</a></div><div class="card-b">';
+if(zhSnap.empty){html+='<div class="lst-i"><div class="lst-a"><p>Koi zeli halqa nahi. <a href="zeli-halqas.html">Pehla banao</a></p></div></div>'}
+else{zhSnap.forEach(doc=>{const z=doc.data();html+='<div class="lst-i"><div class="lst-a"><h4>&#128332; '+(z.masjidName||'Masjid')+'</h4><p>Imam: '+(z.imamName||'N/A')+' | '+(z.imamPhone||'N/A')+'</p><p>Head: '+(z.halqaHeadName||'N/A')+' | '+(z.halqaHeadPhone||'N/A')+'</p><p>'+(z.address||'')+'</p></div></div>';})}
+html+='</div></div>';
+
+return html;
+}
+
+const user=requireAuth(['division_head','district_head','area_head']);
+if(user){initDashboard(user)}
+</script>
+</body>
+</html>
